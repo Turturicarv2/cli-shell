@@ -2,11 +2,67 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include "shell.h"
 
-#define TRUE 1
-#define FALSE 0
-#define SUCCESS 0
-#define MAX_STRING_LENGTH 100
+int main() {
+    shell_loop();
+    return 0;
+}
+
+void shell_loop(void) {
+    while(TRUE) {
+        char *command = get_user_input();
+        char **command_arguments = parse_line(command);
+
+        /* command checking */
+        if(strcmp(command_arguments[0], "exit") == SUCCESS) {
+            return;
+        } else if(strcmp(command_arguments[0], "cd") == SUCCESS) {
+            change_directory(command_arguments);
+        } else if(strcmp(command_arguments[0], "pwd") == SUCCESS) {
+            print_current_directory();
+        } else {
+            printf("Command %s not found\n", command_arguments[0]);
+        }
+
+        /* memory deallocation */
+        __uint8_t number_of_arguments = sizeof(command_arguments)/sizeof(char *);
+        __uint8_t argument_index;
+
+        /* firstly deallocate the strings */
+        for(argument_index = 0; argument_index < number_of_arguments; ++argument_index) {
+            free(command_arguments[argument_index]);
+        }
+
+        /* second, deallocate the pointers */
+        free(command_arguments);
+        free(command);
+    }
+}
+
+char *get_user_input(void) {
+    char *buffer;
+    size_t bufsize = 32;
+    size_t characters;
+
+    /* allocate memory for the string command */
+    buffer = (char *)malloc(bufsize * sizeof(char));
+    if( buffer == NULL) {
+        perror("Unable to allocate buffer");
+        exit(1);
+    }
+
+    /* get the command input from the user */
+    printf("Type something: ");
+    characters = getline(&buffer, &bufsize, stdin);
+
+    /* remove the newline character */
+    if (buffer[characters - 1] == '\n') {
+        buffer[characters - 1] = '\0';
+    }
+
+    return buffer;
+}
 
 char **parse_line(char *command) {
     char *token = strtok(command, " ");
@@ -43,35 +99,6 @@ char **parse_line(char *command) {
     return array_of_arguments;
 }
 
-char *get_user_input(void) {
-    char *buffer;
-    size_t bufsize = 32;
-    size_t characters;
-
-    /* allocate memory for the string command */
-    buffer = (char *)malloc(bufsize * sizeof(char));
-    if( buffer == NULL) {
-        perror("Unable to allocate buffer");
-        exit(1);
-    }
-
-    /* get the command input from the user */
-    printf("Type something: ");
-    characters = getline(&buffer, &bufsize, stdin);
-
-    /* remove the newline character */
-    if (buffer[characters - 1] == '\n') {
-        buffer[characters - 1] = '\0';
-    }
-
-    return buffer;
-}
-
-void print_current_directory() {
-    char string[MAX_STRING_LENGTH];
-    printf("%s\n", getcwd(string, MAX_STRING_LENGTH));
-}
-
 void change_directory(char **command_arguments) {
     __uint8_t argument_length = MAX_STRING_LENGTH + strlen(command_arguments[1]);
     char string[MAX_STRING_LENGTH];
@@ -98,38 +125,9 @@ void change_directory(char **command_arguments) {
     free(relative_path);
 }
 
-void shell_loop(void) {
-    while(TRUE) {
-        char *command = get_user_input();
-        char **command_arguments = parse_line(command);
-
-        /* command checking */
-        if(strcmp(command_arguments[0], "exit") == SUCCESS) {
-            return;
-        } else if(strcmp(command_arguments[0], "cd") == SUCCESS) {
-            change_directory(command_arguments);
-        } else if(strcmp(command_arguments[0], "pwd") == SUCCESS) {
-            print_current_directory();
-        } else {
-            printf("Command %s not found\n", command_arguments[0]);
-        }
-
-        /* memory deallocation */
-        __uint8_t number_of_arguments = sizeof(command_arguments)/sizeof(char *);
-        __uint8_t argument_index;
-
-        /* firstly deallocate the strings */
-        for(argument_index = 0; argument_index < number_of_arguments; ++argument_index) {
-            free(command_arguments[argument_index]);
-        }
-
-        /* second, deallocate the pointers */
-        free(command_arguments);
-        free(command);
-    }
+void print_current_directory() {
+    char string[MAX_STRING_LENGTH];
+    printf("%s\n", getcwd(string, MAX_STRING_LENGTH));
 }
 
-int main() {
-    shell_loop();
-    return 0;
-}
+
