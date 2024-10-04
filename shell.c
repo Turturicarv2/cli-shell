@@ -6,7 +6,8 @@ Requires to be run by an UNIX based Operating System
 #include "shell.h"
 
 
-int main() {
+int main() 
+{
     shell_loop();
     return 0;
 }
