@@ -7,8 +7,8 @@
 
 /* MACROS */
 #define TRUE 1
-#define FALSE 0
 #define SUCCESS 0
+#define FORK_CHILD_ID 0
 #define MAX_STRING_LENGTH 100
 
 /* FUNCTION DECLARATIONS*/

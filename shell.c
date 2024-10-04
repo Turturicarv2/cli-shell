@@ -20,17 +20,31 @@ void shell_loop(void) {
         char *command = get_user_input();
         char **argument_list = parse_line(command);
 
+        if((argument_list == NULL) || (argument_list[0] == NULL)) 
+        {
+            continue;
+        }
+
         /* command checking */
-        if(strcmp(argument_list[0], "exit") == SUCCESS) {
+        if(strcmp(argument_list[0], "exit") == SUCCESS) 
+        {
             return;
-        } else if(strcmp(argument_list[0], "cd") == SUCCESS) {
+        } 
+        else if(strcmp(argument_list[0], "cd") == SUCCESS) 
+        {
             change_directory(argument_list);
-        } else if(strcmp(argument_list[0], "pwd") == SUCCESS) {
+        } 
+        else if(strcmp(argument_list[0], "pwd") == SUCCESS) 
+        {
             print_current_directory();
-        } else if((strcmp(argument_list[0], "ls") == SUCCESS)
-                || (strcmp(argument_list[0], "echo") == SUCCESS)){
+        } 
+        else if((strcmp(argument_list[0], "ls") == SUCCESS)
+                || (strcmp(argument_list[0], "echo") == SUCCESS)) 
+        {
             list_directories(argument_list);
-        } else {
+        }
+        else 
+        {
             printf("Command %s not found\n", argument_list[0]);
         }
 
@@ -39,7 +53,8 @@ void shell_loop(void) {
         __uint8_t argument_index;
 
         /* firstly deallocate the strings */
-        for(argument_index = 0; argument_index < number_of_arguments; ++argument_index) {
+        for(argument_index = 0; argument_index < number_of_arguments; ++argument_index) 
+        {
             free(argument_list[argument_index]);
         }
 
@@ -52,27 +67,29 @@ void shell_loop(void) {
 
 /*
 Function that gets input from the user
-returns a string
+Returns a string
 */
 char *get_user_input(void) {
     char *buffer;
     size_t bufsize = 32;
-    size_t characters;
+    size_t number_of_characters;
 
     /* allocate memory for the string command */
     buffer = (char *)malloc(bufsize * sizeof(char));
-    if( buffer == NULL) {
+    if( buffer == NULL) 
+    {
         perror("Unable to allocate buffer");
         exit(1);
     }
 
     /* get the command input from the user */
     printf("Type your command: ");
-    characters = getline(&buffer, &bufsize, stdin);
+    number_of_characters = getline(&buffer, &bufsize, stdin);
 
     /* remove the newline character */
-    if (buffer[characters - 1] == '\n') {
-        buffer[characters - 1] = '\0';
+    if(buffer[number_of_characters - 1] == '\n') 
+    {
+        buffer[number_of_characters - 1] = '\0';
     }
 
     return buffer;
@@ -92,12 +109,14 @@ char **parse_line(char *command) {
     char **argument_list = NULL;
     __uint8_t number_of_arguments = 0;
 
-    while(token != NULL) {
+    while(token != NULL) 
+    {
         ++number_of_arguments;
 
         /* increase memory for the array */
         argument_list = (char **) realloc(argument_list, number_of_arguments * sizeof(char *));
-        if(argument_list == NULL) {
+        if(argument_list == NULL) 
+        {
             perror("Unable to allocate memory");
             free(token);
             exit(1);
@@ -105,7 +124,8 @@ char **parse_line(char *command) {
 
         /* allocate memory for the string token */
         argument_list[number_of_arguments - 1] = (char *) malloc(strlen(token) * sizeof(char));
-        if(argument_list[number_of_arguments - 1] == NULL) {
+        if(argument_list[number_of_arguments - 1] == NULL) 
+        {
             perror("Unable to allocate memory");
             free(token);
             exit(1);
@@ -122,7 +142,8 @@ char **parse_line(char *command) {
 
     /* increase memory for the array to store last NULL value */
     argument_list = (char **) realloc(argument_list, number_of_arguments * sizeof(char *));
-    if(argument_list == NULL) {
+    if(argument_list == NULL) 
+    {
         perror("Unable to allocate memory");
         free(token);
         exit(1);
@@ -138,7 +159,7 @@ char **parse_line(char *command) {
 
 /*
 Function that handles the cd command; will change working directory
-takes as IN-argument the command and its arguments stored in a vector of strings
+Takes as IN-argument the command and its arguments stored in a vector of strings
 */
 void change_directory(char **argument_list) {
     __uint8_t argument_length = MAX_STRING_LENGTH + strlen(argument_list[1]);
@@ -150,15 +171,20 @@ void change_directory(char **argument_list) {
     strcat(relative_path, "/");
     strcat(relative_path, argument_list[1]);
 
-    if(chdir(argument_list[1]) == SUCCESS) { 
+    if(chdir(argument_list[1]) == SUCCESS) 
+    { 
         /* case for absolute path */
         printf("New working directory: ");
         print_current_directory();
-    } else if(chdir(relative_path) == SUCCESS) { 
+    } 
+    else if(chdir(relative_path) == SUCCESS) 
+    { 
         /* case for relative path */
         printf("New working directory: ");
         print_current_directory();
-    } else {
+    } 
+    else 
+    {
         /* case for unrecognized path */
         printf("%s: No such file or directory\n", argument_list[1]);
     }
@@ -178,22 +204,29 @@ void print_current_directory() {
 
 /*
 Function that handles echo and ls commands
-takes as IN-argument the command and its arguments stored in a vector of strings
+Takes as IN-argument the command and its arguments stored in a vector of strings
 */
-void list_directories(char **argument_list) {
+void list_directories(char **argument_list) 
+{
     int return_value_fork = fork();
-    if(return_value_fork == 0) {
+    if(return_value_fork == FORK_CHILD_ID) 
+    {
         /* child process... call system function */
         int status_code = execvp(argument_list[0], argument_list);
         
-        if (status_code == -1) {
+        if (status_code == -1) 
+        {
             perror("System command failed\n");
             exit(1);
         }
-    } else if(return_value_fork > 0) {
+    } 
+    else if(return_value_fork > FORK_CHILD_ID) 
+    {
         /* parent process... continue c program */
         wait(NULL);
-    } else {
+    }
+    else 
+    {
         /* fork failed... abort mission */
         perror("Fork failed\n");
         exit(1);
